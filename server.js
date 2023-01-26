@@ -1,12 +1,12 @@
+require('dotenv').config();
 const express = require("express")
 const mongo = require("mongodb").MongoClient
 
-const uri = "mongodb+srv://connerkup:Awqreytiupo123@cluster0.7snemms.mongodb.net/?retryWrites=true&w=majority";
-
+const uri = process.env.MONGO_DB_URI
 
 const app = express();
 
-let db, trips, expenses;
+let db, ideas, expenses;
 
 mongo.connect(
   uri,
@@ -19,46 +19,50 @@ mongo.connect(
       console.error(err)
       return
     }
-    db = client.db("tripcost")
-    trips = db.collection("trips")
-    expenses = db.collection("expenses")
+    db = client.db("launchfizz")
+    ideas = db.collection("ideas")
+    users = db.collection("users")
+    console.log("Connected to MongoDB succesfully")
   }
 )
 
 app.use(express.json())
 
-app.post("/trips", (req, res) => {
-  const name = req.body.name
-  trips.insertOne({ name: name }, (err, result) => {
-    if (err) {
-        console.error(err)
-        res.status(500).json({ err: err})
-        return
-    }
-    console.log(result)
-    res.status(200).json({ ok: true})
-  })
-})
 
-app.get("/trips", (req, res) => {
-  trips.find().toArray((err, items) => {
-    if (err) {
+app.post("/ideas", (req, res) => {
+  ideas.insertOne(
+    {
+      seed: req.body.seed,
+      idea_name: req.body.idea_name,
+      description: req.body.description
+    },
+    (err, result) => {
+      if (err) {
         console.error(err)
         res.status(500).json({ err: err })
         return
+      }
+      console.log(result)
+      res.status(200).json({ ok: true })
+    })
+})
+
+app.get("/ideas", (req, res) => {
+  ideas.find().toArray((err, items) => {
+    if (err) {
+      console.error(err)
+      res.status(500).json({ err: err })
+      return
     }
-    res.status(200).json({ trips: items})
+    res.status(200).json({ ideas: items })
   })
 });
 
-app.post("/expenses", (req, res) => {
-  expenses.insertOne(
+app.post("/users", (req, res) => {
+  users.insertOne(
     {
-      trip: req.body.trip,
-      date: req.body.date,
-      amount: req.body.amount,
-      category: req.body.category,
-      description: req.body.description,
+      name: req.body.name,
+      username: req.body.username
     },
     (err, result) => {
       if (err) {
@@ -71,16 +75,16 @@ app.post("/expenses", (req, res) => {
   )
 })
 
-app.get("/expenses", (req, res) => {
+app.get("/users", (req, res) => {
   /* */
-  expenses.find({ trip: req.body.trip }).toArray((err, items) => {
+  users.find({}).toArray((err, items) => {
     if (err) {
-        console.error(err)
-        res.status(500).json({err: err})
-        return
+      console.error(err)
+      res.status(500).json({ err: err })
+      return
     }
-    res.status(200).json({ expenses: items})
+    res.status(200).json({ users: items })
   })
 });
 
-app.listen(3000, () => console.log("Server ready"))
+app.listen(3000, () => console.log("Server listening on port 3000"))
