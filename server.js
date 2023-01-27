@@ -3,37 +3,19 @@ const express = require("express");
 const mongo = require("mongodb").MongoClient;
 const crypto = require('crypto');
 const { ObjectId } = require('mongodb');
-
+const db = require('./db')
+const ideasRouter = require('./routes/ideas')
+const usersRouter = require('./routes/users')
 const uri = process.env.MONGO_DB_URI
-
+const port = process.env.PORT
 const app = express();
-
-let db, ideas, expenses;
-
-mongo.connect(
-  uri,
-  {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  },
-  (err, client) => {
-    if (err) {
-      console.error(err)
-      return
-    }
-    db = client.db("launchfizz")
-    ideas = db.collection("ideas")
-    users = db.collection("users")
-    seeds = db.collection("seeds")
-    console.log("Connected to MongoDB succesfully")
-  }
-)
 
 app.use(express.json())
 
-function generateSeed() {
-  return crypto.randomBytes(16).toString('hex');
-}
+app.use('/ideas', ideasRouter);
+app.use('/users', usersRouter);
+
+/*
 
 // Create an Idea
 app.post("/ideas", (req, res) => {
@@ -129,7 +111,6 @@ app.put("/users/:userId/favorites/:ideaId", (req, res) => {
 });
 
 app.get("/users", (req, res) => {
-  /* */
   users.find({}).toArray((err, items) => {
     if (err) {
       console.error(err)
@@ -140,4 +121,13 @@ app.get("/users", (req, res) => {
   })
 });
 
-app.listen(3000, () => console.log("Server listening on port 3000"))
+*/
+
+db.connectToDb()
+  .then(() => {
+    // Server code here
+    app.listen(port, () => console.log(`Server listening on port ${port}`))
+  })
+  .catch((err) => {
+    console.error(err);
+  });
